@@ -1,0 +1,6 @@
+@GraphLinker_HostAddress = http://localhost:5136
+
+GET {{GraphLinker_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
