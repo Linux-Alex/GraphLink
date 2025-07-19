@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("GraphLinker")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+160d02486e65c04fb30cd6fe20c6b5259ebadb5e")]
 [assembly: System.Reflection.AssemblyProductAttribute("GraphLinker")]
 [assembly: System.Reflection.AssemblyTitleAttribute("GraphLinker")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

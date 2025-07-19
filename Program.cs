@@ -20,9 +20,9 @@ builder.Services.AddSingleton<M365EmailService>();
 // Add minimal CORS only for Swagger UI (localhost origin)
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowSwagger", policy =>
+    options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins("http://localhost:5000", "https://localhost:5001")
+        policy.AllowAnyOrigin()
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
@@ -32,13 +32,14 @@ builder.Services.AddCors(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "GraphLinker API", Version = "v1" });
+    
     c.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
     {
         Description = "API Key needed to access the endpoints. Use 'X-API-KEY: {your_api_key}'",
         In = ParameterLocation.Header,
         Name = "X-API-KEY",
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "ApiKeyScheme"
+        Type = SecuritySchemeType.ApiKey
     });
 
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -50,12 +51,9 @@ builder.Services.AddSwaggerGen(c =>
                 {
                     Type = ReferenceType.SecurityScheme,
                     Id = "ApiKey"
-                },
-                Scheme = "ApiKeyScheme",
-                Name = "X-API-KEY",
-                In = ParameterLocation.Header,
+                }
             },
-            new List<string>()
+            Array.Empty<string>()
         }
     });
 });
@@ -71,7 +69,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 
 // Use Swagger UI only with CORS allowed from localhost
 app.UseWhen(ctx => ctx.Request.Path.StartsWithSegments("/swagger"), appBuilder =>
@@ -80,29 +78,56 @@ app.UseWhen(ctx => ctx.Request.Path.StartsWithSegments("/swagger"), appBuilder =
 });
 
 app.UseSwagger();
-app.UseSwaggerUI();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "GraphLinker API v1");
+    c.RoutePrefix = string.Empty; // Makes Swagger UI available at root URL
+});
 
+// Middleware to check API key except for Swagger
 // Middleware to check API key except for Swagger
 app.Use(async (context, next) =>
 {
     var path = context.Request.Path.Value ?? "";
 
-    if (path.StartsWith("/swagger") || path.StartsWith("/favicon"))
+    // List of paths that shouldn't require API key
+    var excludedPaths = new[]
+    {
+        "/swagger",
+        "/favicon.ico",
+        "/swagger-ui.css",
+        "/swagger-ui-bundle.js",
+        "/swagger-ui-standalone-preset.js",
+        "/swagger.json",
+        "/index.html"
+    };
+
+    if (excludedPaths.Any(p => path.StartsWith(p)))
     {
         await next();
         return;
     }
 
-    if (!context.Request.Headers.TryGetValue(ApiKeyHeaderName, out var extractedApiKey) ||
-        extractedApiKey != ApiKeyValue)
+    if (!context.Request.Headers.TryGetValue(ApiKeyHeaderName, out var extractedApiKey))
     {
+        Console.WriteLine($"Missing API key header for path: {path}");
         context.Response.StatusCode = 401;
-        await context.Response.WriteAsync("Unauthorized");
+        await context.Response.WriteAsync("Unauthorized: Missing API key header");
+        return;
+    }
+
+    if (extractedApiKey != ApiKeyValue)
+    {
+        Console.WriteLine($"Invalid API key for path: {path}. Provided: {extractedApiKey}");
+        context.Response.StatusCode = 401;
+        await context.Response.WriteAsync("Unauthorized: Invalid API key");
         return;
     }
 
     await next();
 });
+
+app.UseCors();
 
 // === API Endpoints ===
 
