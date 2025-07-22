@@ -60,8 +60,8 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-const string ApiKeyHeaderName = "X-API-KEY";
-const string ApiKeyValue = "supersecureapikey123!"; // Move to config in prod
+// const string ApiKeyHeaderName = "X-API-KEY";
+// const string ApiKeyValue = "supersecureapikey123!"; // Move to config in prod
 
 // === Middleware ===
 if (!app.Environment.IsDevelopment())
@@ -84,7 +84,13 @@ app.UseSwaggerUI(c =>
     c.RoutePrefix = string.Empty; // Makes Swagger UI available at root URL
 });
 
-// Middleware to check API key except for Swagger
+// Add this at the top of your middleware section:
+var apiKeyConfig = builder.Configuration["ApiKey"];
+if (string.IsNullOrEmpty(apiKeyConfig))
+{
+    throw new InvalidOperationException("API Key configuration is missing.");
+}
+
 // Middleware to check API key except for Swagger
 app.Use(async (context, next) =>
 {
@@ -108,7 +114,7 @@ app.Use(async (context, next) =>
         return;
     }
 
-    if (!context.Request.Headers.TryGetValue(ApiKeyHeaderName, out var extractedApiKey))
+    if (!context.Request.Headers.TryGetValue("X-API-KEY", out var extractedApiKey))
     {
         Console.WriteLine($"Missing API key header for path: {path}");
         context.Response.StatusCode = 401;
@@ -116,7 +122,7 @@ app.Use(async (context, next) =>
         return;
     }
 
-    if (extractedApiKey != ApiKeyValue)
+    if (extractedApiKey != apiKeyConfig)
     {
         Console.WriteLine($"Invalid API key for path: {path}. Provided: {extractedApiKey}");
         context.Response.StatusCode = 401;

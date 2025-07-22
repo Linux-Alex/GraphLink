@@ -49,7 +49,7 @@ All endpoints require an API key in the header:
 X-API-KEY: supersecureapikey123!
 ```
 
-> 🔐 The key is configured in Program.cs (change it in production).
+> 🔐 The key is configured in `appsettings.json` (change it in production).
 
 
 ## ⚙️ Configuration
@@ -63,7 +63,7 @@ You need to register a Microsoft 365 app and the GraphLink with it:
     2. Search for **App registrations** and click on **+ New registration**
     3. Enter details:
         - Name: `GraphLink Service`
-        - Supported account types: **Accounts in this organizational directory only (MSFT only - Single Tenant)**
+        - Supported account types: **Accounts in this organizational directory only (#### only - Single Tenant)**
         - Redirect URI: `http://localhost` (Web platform)
     4. Submit with a click on the button **Register**
 2. Configure API Permissions
@@ -74,7 +74,7 @@ You need to register a Microsoft 365 app and the GraphLink with it:
         - `Mail.ReadWrite`
         - `Mail.Send`
     4. Submit with a click on the button **Add permissions**
-    5. In the **Configure permissions** region, click on the **✓ Grand admin consent for MSFT** and confirm to add the admin permissions for the task
+    5. In the **Configure permissions** region, click on the **✓ Grand admin consent for ####** and confirm to add the admin permissions for the task
 3. Create Client Secret
     1. In the registrated app, go to **Manage** > **Certificates & secrets**
     2. Click on **New client secret**
@@ -149,6 +149,7 @@ You need to register a Microsoft 365 app and the GraphLink with it:
 2. Edit the file with these exact values from you Azure AD app registration:
     ```json
     {
+        "ApiKey": "supersecureapikey123!", // Change the key
         "AzureAD": {
             "ClientId": "########-####-####-####-############", // From Azure AD > App Registration > Overview
             "TenantId": "########-####-####-####-############", // From Azure AD > Overview
